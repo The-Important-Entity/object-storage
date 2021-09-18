@@ -1,0 +1,25 @@
+{
+  "name": "object-storage",
+  "version": "1.0.0",
+  "description": "Object storage api",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/The-Important-Entity/object-storage.git"
+  },
+  "author": "Joseph Scalera",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/The-Important-Entity/object-storage/issues"
+  },
+  "homepage": "https://github.com/The-Important-Entity/object-storage#readme",
+  "dependencies": {
+    "dht-node": "git+ssh://git@github.com:The-Important-Entity/dht-project.git",
+    "express": "^4.17.1",
+    "fs": "0.0.1-security",
+    "path": "^0.12.7"
+  }
+}
