@@ -1,30 +1,9 @@
 const express = require("express");
-const axios = require("axios");
 const fs = require("fs");
 const path = require("path");
 var Busboy = require('busboy');
-
-const uploadFile = (req, filePath) => {
-    return new Promise((resolve, reject) => {
-        const stream = fs.createWriteStream(filePath);
-        // With the open - event, data will start being written
-        // from the request to the stream's destination path
-        stream.on('open', () => {
-            req.pipe(stream);
-        });
-
-        // When the stream is finished, print a final message
-        // Also, resolve the location of the file to calling function
-        stream.on('close', () => {
-            resolve(filePath);
-        });
-
-        // If something goes wrong, reject the primise
-        stream.on('error', err => {
-            reject(err);
-        });
-    });
-};
+const { response } = require("express");
+const Requester = require("./Requester.js");
 
 class Router {
     constructor(port, dht_url, data_dir){
@@ -35,52 +14,68 @@ class Router {
         this.port = port;
         this.dht_url = dht_url;
         this.data_dir = data_dir;
+        this.Requester = new Requester(this.dht_url);
+        this.test_filename = new RegExp('^[A-Za-z0-9]+[A-Za-z0-9.-]+[A-Za-z0-9]+$');
+
         this.app.get("/", function(req, res) {
             res.send("Working");
         })
 
-        this.app.put("/insert/:filename", async function(req, res) {
-            const filename = req.params.filename;
-            const file_path = path.join(this.data_dir, filename);
-            var response = await axios.get(this.dht_url + "/lookup?key=" + filename);
-            if (response.data){
-                if (response.data.lock_type == "write") {
-                    res.status(400).send("Error: write lock");
-                    return;
-                }
-            }
-            response = await axios.post(this.dht_url + "/insert", {
-                "key": filename,
-                "lock_type": "write"
-            });
+        this.app.get("/:filename", this.download.bind(this));
+        this.app.put("/:filename", this.insert.bind(this));
+    }
 
-            if (fs.existsSync(file_path)){
-                res.status(400).send("Error: object already exists");
-                await axios.post(this.dht_url + "/delete", {
-                    "key": filename
-                });
+    async download(req, res) {
+        const filename = req.params.filename;
+        const file_path = path.join(this.data_dir, filename);
+
+        if (!this.test_filename.test(filename)) {
+            res.status(400).send("Error: bad filename");
+        }
+        if (!fs.existsSync(file_path)){
+            res.status(400).send("Error: object already exists");
+            return;
+        }
+
+        const filestream = fs.createReadStream(file_path);
+        filestream.pipe(res);
+    }
+
+    async insert(req, res) {
+        const filename = req.params.filename;
+        const file_path = path.join(this.data_dir, filename);
+
+        if (!this.test_filename.test(filename)) {
+            res.status(400).send("Error: bad filename");
+            return
+        }
+
+        var response = await this.Requester.insert_dht_writelock(filename);
+        if (response == "Failed") {
+            response = await this.Requester.get_locktype(filename);
+            if (response.lock_type == "write") {
+                res.status(400).send("Error: write lock");
                 return;
             }
+            else {
+                res.status(500).send("Error: potential server outage");
+                return;
+            }
+        }
 
 
 
-            var busboy = new Busboy({ headers: req.headers });
-            busboy.on('file', function(fieldname, file, filename, encoding, mimetype) {
-                console.log('Uploading: ' + file_path);
-                file.pipe(fs.createWriteStream(file_path));
-            });
+        var busboy = new Busboy({ headers: req.headers });
+        busboy.on('file', function(fieldname, file, filename, encoding, mimetype) {
+            file.pipe(fs.createWriteStream(file_path));
+        });
 
-            busboy.on('finish', async function() {
-                await axios.post(this.dht_url + "/delete", {
-                    "key": filename
-                });
-                console.log('Upload complete');
-                res.writeHead(200, { 'Connection': 'close' });
-                res.end("That's all folks!");
-            }.bind(this));
-            return req.pipe(busboy);
-
+        busboy.on('finish', async function() {
+            await this.Requester.delete_dht_writelock(filename);
+            res.writeHead(200, { 'Connection': 'close' });
+            res.end("File upload Successful!");
         }.bind(this));
+        return req.pipe(busboy);
     }
 
     listen() {

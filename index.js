@@ -1,4 +1,4 @@
-const DHT_Node = require("../dht-project");
+const DHT_Node = require("dht-node");
 const Router = require("./src/router");
 const dht_config = require("./src/dht_config");
 require("dotenv").config();
