@@ -23,6 +23,7 @@ class Router {
 
         this.app.get("/:filename", this.download.bind(this));
         this.app.put("/:filename", this.insert.bind(this));
+        this.app.delete("/:filename", this.delete.bind(this));
     }
 
     async download(req, res) {
@@ -33,7 +34,7 @@ class Router {
             res.status(400).send("Error: bad filename");
         }
         if (!fs.existsSync(file_path)){
-            res.status(400).send("Error: object already exists");
+            res.status(400).send("Error: object doesn't exists");
             return;
         }
 
@@ -75,7 +76,41 @@ class Router {
             res.writeHead(200, { 'Connection': 'close' });
             res.end("File upload Successful!");
         }.bind(this));
+
         return req.pipe(busboy);
+    }
+
+    async delete(req, res) {
+        const filename = req.params.filename;
+        const file_path = path.join(this.data_dir, filename);
+
+        if (!this.test_filename.test(filename)) {
+            res.status(400).send("Error: bad filename");
+            return
+        }
+
+        var response = await this.Requester.insert_dht_writelock(filename);
+        if (response == "Failed") {
+            response = await this.Requester.get_locktype(filename);
+            if (response.lock_type == "write") {
+                res.status(400).send("Error: write lock");
+                return;
+            }
+            else {
+                res.status(500).send("Error: potential server outage");
+                return;
+            }
+        }
+
+        if (!fs.existsSync(file_path)){
+            res.status(400).send("Error: object doesn't exists");
+            return;
+        }
+
+        fs.unlinkSync(file_path);
+
+        await this.Requester.delete_dht_writelock(filename);
+        res.status(200).send("Success");
     }
 
     listen() {
