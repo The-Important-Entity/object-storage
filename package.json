@@ -17,6 +17,8 @@
   },
   "homepage": "https://github.com/The-Important-Entity/object-storage#readme",
   "dependencies": {
+    "busboy": "^0.3.1",
+    "connect-busboy": "0.0.2",
     "dht-node": "git+ssh://git@github.com:The-Important-Entity/dht-project.git",
     "express": "^4.17.1",
     "fs": "0.0.1-security",

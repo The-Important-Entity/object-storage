@@ -2,6 +2,7 @@ const express = require("express");
 const axios = require("axios");
 const fs = require("fs");
 const path = require("path");
+var Busboy = require('busboy');
 
 const uploadFile = (req, filePath) => {
     return new Promise((resolve, reject) => {
@@ -43,7 +44,6 @@ class Router {
             const file_path = path.join(this.data_dir, filename);
             var response = await axios.get(this.dht_url + "/lookup?key=" + filename);
             if (response.data){
-                console.log(response.data);
                 if (response.data.lock_type == "write") {
                     res.status(400).send("Error: write lock");
                     return;
@@ -62,25 +62,24 @@ class Router {
                 return;
             }
 
-            // req.pipe(fs.createWriteStream(file_path));
-            // req.on('end', async function(){
-            //     await axios.post(this.dht_url + "/delete", {
-            //         "key": filename
-            //     });
-    
-            //     res.send("Success");
-            // }.bind(this));
-            uploadFile(req, file_path).then(async function(path){
+
+
+            var busboy = new Busboy({ headers: req.headers });
+            busboy.on('file', function(fieldname, file, filename, encoding, mimetype) {
+                console.log('Uploading: ' + file_path);
+                file.pipe(fs.createWriteStream(file_path));
+            });
+
+            busboy.on('finish', async function() {
                 await axios.post(this.dht_url + "/delete", {
                     "key": filename
                 });
-                res.send({ status: 'success', path });
-            }.bind(this)).catch(async function(err){
-                await axios.post(this.dht_url + "/delete", {
-                    "key": filename
-                });
-                res.send({ status: 'error', err });
-            }.bind(this));;
+                console.log('Upload complete');
+                res.writeHead(200, { 'Connection': 'close' });
+                res.end("That's all folks!");
+            }.bind(this));
+            return req.pipe(busboy);
+
         }.bind(this));
     }
 
