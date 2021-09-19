@@ -5,6 +5,8 @@ var Busboy = require('busboy');
 const { response } = require("express");
 const Requester = require("./Requester.js");
 
+
+
 class Router {
     constructor(port, dht_url, data_dir){
         this.app = express();
@@ -23,94 +25,122 @@ class Router {
 
         this.app.get("/:filename", this.download.bind(this));
         this.app.put("/:filename", this.insert.bind(this));
-        this.app.delete("/:filename", this.delete.bind(this));
+        this.app.delete("/:filename", this.delete.bind(this),);
+    }
+
+    async lockTable(filename) {
+        var response = await this.Requester.insert_dht_writelock(filename);
+        if (response == "Failed") {
+            response = await this.Requester.get_locktype(filename);
+            if (response.lock_type == "write") {
+                return 1;
+            }
+            else {
+                return 2;
+            }
+        }
+        return 0;
+    }
+
+    async unlockTable(filename) {
+        await this.Requester.delete_dht_writelock(filename);
+        return 0;
     }
 
     async download(req, res) {
         const filename = req.params.filename;
-        const file_path = path.join(this.data_dir, filename);
+        const filepath = path.join(this.data_dir, filename);
 
         if (!this.test_filename.test(filename)) {
             res.status(400).send("Error: bad filename");
+            return;
         }
-        if (!fs.existsSync(file_path)){
+
+        if (!fs.existsSync(filepath)){
             res.status(400).send("Error: object doesn't exists");
             return;
         }
 
-        const filestream = fs.createReadStream(file_path);
+        const filestream = fs.createReadStream(filepath);
         filestream.pipe(res);
+    }
+
+    initWriteStream(req, res, filename, filepath) {
+        var busboy = new Busboy({ headers: req.headers });
+        busboy.on("error", function(err) {
+            console.log("Busboy error catching......>>>>>>>>>>>>>>", err);
+        });
+
+        busboy.on('file', function(fieldname, file, filename, encoding, mimetype) {
+            var stream = fs.createWriteStream(filepath);
+            
+            file.on("error", function(err) {
+                console.log("fstream error catching......>>>>>>>>>>>>>>", err);
+            });
+
+            file.pipe(stream);
+        });
+
+        busboy.on('finish', async function() {
+            await this.unlockTable(filename);
+            res.writeHead(200, { 'Connection': 'close' });
+            res.end("File upload Successful!");
+        }.bind(this));
+        return busboy;
     }
 
     async insert(req, res) {
         const filename = req.params.filename;
-        const file_path = path.join(this.data_dir, filename);
+        const filepath = path.join(this.data_dir, filename);
 
         if (!this.test_filename.test(filename)) {
             res.status(400).send("Error: bad filename");
             return
         }
 
-        var response = await this.Requester.insert_dht_writelock(filename);
-        if (response == "Failed") {
-            response = await this.Requester.get_locktype(filename);
-            if (response.lock_type == "write") {
-                res.status(400).send("Error: write lock");
-                return;
-            }
-            else {
-                res.status(500).send("Error: potential server outage");
-                return;
-            }
+        var response = await this.lockTable(filename);
+        if (response == 1){
+            res.status(400).send("Error: write locked");
+            return;
+        }
+        else if (response == 2){
+            res.status(500).send("Error: server outage");
+            return;
         }
 
+        var stream = this.initWriteStream(req, res, filename, filepath);
 
-
-        var busboy = new Busboy({ headers: req.headers });
-        busboy.on('file', function(fieldname, file, filename, encoding, mimetype) {
-            file.pipe(fs.createWriteStream(file_path));
-        });
-
-        busboy.on('finish', async function() {
-            await this.Requester.delete_dht_writelock(filename);
-            res.writeHead(200, { 'Connection': 'close' });
-            res.end("File upload Successful!");
-        }.bind(this));
-
-        return req.pipe(busboy);
+        return req.pipe(stream);
     }
 
     async delete(req, res) {
         const filename = req.params.filename;
-        const file_path = path.join(this.data_dir, filename);
+        const filepath = path.join(this.data_dir, filename);
 
         if (!this.test_filename.test(filename)) {
             res.status(400).send("Error: bad filename");
             return
         }
 
-        var response = await this.Requester.insert_dht_writelock(filename);
-        if (response == "Failed") {
-            response = await this.Requester.get_locktype(filename);
-            if (response.lock_type == "write") {
-                res.status(400).send("Error: write lock");
-                return;
-            }
-            else {
-                res.status(500).send("Error: potential server outage");
-                return;
-            }
+        var response = await this.lockTable(filename);
+        if (response == 1){
+            res.status(400).send("Error: write locked");
+            return;
+        }
+        else if (response == 2){
+            res.status(500).send("Error: server outage");
+            return;
         }
 
-        if (!fs.existsSync(file_path)){
+        if (!fs.existsSync(filepath)){
             res.status(400).send("Error: object doesn't exists");
             return;
         }
 
-        fs.unlinkSync(file_path);
+        fs.unlinkSync(filepath);
 
-        await this.Requester.delete_dht_writelock(filename);
-        res.status(200).send("Success");
+        await this.unlockTable(filename);
+        res.status(200).send("File delete Successful!");
     }
 
     listen() {
