@@ -8,14 +8,14 @@ const Requester = require("./Requester.js");
 
 
 class Router {
-    constructor(port, dht_url, data_dir){
+    constructor(config){
         this.app = express();
         this.app.use(express.json());
         this.app.use(express.urlencoded({extended: false}));
 
-        this.port = port;
-        this.dht_url = dht_url;
-        this.data_dir = data_dir;
+        this.port = config.PORT;
+        this.dht_url = config.DHT_URL;
+        this.data_dir = config.DATA_DIR;
         this.Requester = new Requester(this.dht_url);
         
         try {
@@ -153,10 +153,25 @@ class Router {
         res.status(200).send("File delete Successful!");
     }
 
-    listen() {
-        this.app.listen(this.port, function(){
-            console.log("Object Storage Gateway listening on port " + this.port.toString());
-        }.bind(this));
+    start() {
+        try {
+            this.server = this.app.listen(this.port, function(){
+                console.log("Object Storage Gateway listening on port " + this.port.toString());
+            }.bind(this));
+        }
+        catch(err) {
+            console.log(err);
+            throw err;
+        }
+    }
+
+    stop() {
+        try {
+            this.server.close();
+        }
+        catch(err) {
+            throw err;
+        }
     }
 }
 
