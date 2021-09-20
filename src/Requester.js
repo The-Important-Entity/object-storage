@@ -41,6 +41,21 @@ class Requester {
             return "Failed";
         }
     }
+
+    async deleteWithUrl() {
+        try {
+            const response = await axios.get(this.dht_url + "/all_bindings");
+            const allBindings = response.data;
+            for (var i = 0; i < allBindings.length; i++) {
+                if (allBindings[i].value.url == this.dht_url) {
+                    this.delete_dht_writelock(allBindings[i].key);
+                }
+            }
+        }
+        catch {
+            console.log(1);
+        }
+    }
 }
 
 module.exports = Requester;

@@ -17,6 +17,14 @@ class Router {
         this.dht_url = dht_url;
         this.data_dir = data_dir;
         this.Requester = new Requester(this.dht_url);
+        
+        try {
+            this.Requester.deleteWithUrl();
+        }
+        catch {
+            
+        }
+        
         this.test_filename = new RegExp('^[A-Za-z0-9]+[A-Za-z0-9.-]+[A-Za-z0-9]+$');
 
         this.app.get("/", function(req, res) {
@@ -73,13 +81,13 @@ class Router {
 
         busboy.on('file', function(fieldname, file, filename, encoding, mimetype) {
             var stream = fs.createWriteStream(filepath);
-            
+
             file.on("error", function(err) {
                 console.log("fstream error catching......>>>>>>>>>>>>>>", err);
             });
 
             file.pipe(stream);
-        });
+        }.bind(this));
 
         busboy.on('finish', async function() {
             await this.unlockTable(filename);
@@ -109,7 +117,9 @@ class Router {
         }
 
         var stream = this.initWriteStream(req, res, filename, filepath);
-
+        req.on('close', async function (err){
+            await this.unlockTable(filename);
+        }.bind(this));
         return req.pipe(stream);
     }
 
