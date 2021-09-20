@@ -25,15 +25,21 @@ class Router {
             
         }
         
-        this.test_filename = new RegExp('^[A-Za-z0-9]+[A-Za-z0-9.-]+[A-Za-z0-9]+$');
+        this.test_name = new RegExp('^[A-Za-z0-9]+[A-Za-z0-9.-]+[A-Za-z0-9]+$');
 
         this.app.get("/", function(req, res) {
             res.send("Working");
         })
 
-        this.app.get("/:filename", this.download.bind(this));
-        this.app.put("/:filename", this.insert.bind(this));
-        this.app.delete("/:filename", this.delete.bind(this));
+        //Operations on namespaces
+        this.app.get("/:namespace", this.getNamespaceFiles.bind(this));
+        this.app.put("/:namespace", this.createNamespace.bind(this));
+        this.app.delete("/:namespace", this.deleteNamespace.bind(this));
+
+        //Operations on files in a namespace
+        this.app.get("/:namespace/:filename", this.download.bind(this));
+        this.app.put("/:namespace/:filename", this.insert.bind(this));
+        this.app.delete("/:namespace/:filename", this.delete.bind(this));
     }
 
     async lockTable(filename) {
@@ -55,17 +61,132 @@ class Router {
         return 0;
     }
 
+    async getLock(filename) {
+        return await this.Requester.get_locktype(filename);
+    }
+
+    async getNamespaceFiles(req, res) {
+        const namespace = req.params.namespace;
+        const dirpath = path.join(this.data_dir, namespace);
+
+        if (!this.test_name.test(namespace)) {
+            res.status(400).send("Error: bad namespace name");
+            return;
+        }
+
+        // if (!fs.existsSync(dirpath)){
+        //     res.status(400).send("Error: namespace doesn't exist");
+        //     return;
+        // }
+
+        fs.readdir(dirpath, function (err, files) {
+            //handling error
+            if (err) {
+                res.status(400).send("Error: namespace doesn't exist");
+                return;
+            } 
+            //listing all files using forEach
+            res.status(200).send(files);
+            return;
+        });
+    }
+
+    async createNamespace(req, res) {
+        const namespace = req.params.namespace;
+        const dirpath = path.join(this.data_dir, namespace);
+
+        this.lockTable(req.url);
+        if (!this.test_name.test(namespace)) {
+            res.status(400).send("Error: bad namespace name");
+            return;
+        }
+
+        if (fs.existsSync(dirpath)){
+            res.status(400).send("Error: namespace already exists");
+            return;
+        }
+
+        fs.mkdir(dirpath, function(err) {
+            if (err) {
+                res.status(500).send("Error: creating namespace");
+                this.unlockTable(req.url);
+                return;
+            }
+            res.status(200).send("Success!");
+        }.bind(this));
+        this.unlockTable(req.url);
+    }
+
+    async deleteNamespace(req, res) {
+        const namespace = req.params.namespace;
+        const dirpath = path.join(this.data_dir, namespace);
+
+        this.lockTable(req.url);
+        if (!this.test_name.test(namespace)) {
+            res.status(400).send("Error: bad namespace name");
+            this.unlockTable(req.url);
+            return;
+        }
+
+        if (!fs.existsSync(dirpath)){
+            res.status(400).send("Error: namespace doesn't exist");
+            this.unlockTable(req.url);
+            return;
+        }
+
+        fs.readdir(dirpath, function (err, files) {
+            //handling error
+            if (err) {
+                res.status(400).send("Error: deleting namespace");
+                this.unlockTable(req.url);
+                return;
+            } 
+            if (files.length == 0) {
+                fs.rmdir(dirpath, function(err) {
+                    if (err) {
+                        res.status(500).send("Error: deleting namespace");
+                        this.unlockTable(req.url);
+                        return;
+                    }
+                    res.status(200).send("Success!");
+                }.bind(this));
+            }
+            else {
+                res.status(400).send("Error: namespace is not empty");
+                this.unlockTable(req.url);
+                return;
+            }
+        }.bind(this));
+        this.unlockTable(req.url);
+    }
+
     async download(req, res) {
-        const filename = req.params.filename;
+        const filename = req.url;
         const filepath = path.join(this.data_dir, filename);
 
-        if (!this.test_filename.test(filename)) {
-            res.status(400).send("Error: bad filename");
+        const response = await this.getLock(filename);
+        if (response) {
+            res.status(400).send("Error: object is " + response.lock_type + " locked");
+            return;
+        }
+
+        if (!this.test_name.test(req.params.namespace)) {
+            res.status(400).send("Error: bad namespace name");
+            return;
+        }
+
+        if (!this.test_name.test(req.params.filename)) {
+            res.status(400).send("Error: bad file name");
+            return;
+        }
+
+        if (!fs.existsSync(path.join(this.data_dir, req.params.namespace))) {
+            res.status(400).send("Error: namespace doesn't exist");
             return;
         }
 
         if (!fs.existsSync(filepath)){
-            res.status(400).send("Error: object doesn't exists");
+            res.status(400).send("Error: object doesn't exist");
             return;
         }
 
@@ -90,23 +211,34 @@ class Router {
         }.bind(this));
 
         busboy.on('finish', async function() {
-            await this.unlockTable(filename);
+            await this.unlockTable(req.url);
             res.writeHead(200, { 'Connection': 'close' });
-            res.end("File upload Successful!");
+            res.end("Success!");
         }.bind(this));
         return busboy;
     }
 
     async insert(req, res) {
-        const filename = req.params.filename;
+        const filename = path.join(req.params.namespace, req.params.filename);
         const filepath = path.join(this.data_dir, filename);
 
-        if (!this.test_filename.test(filename)) {
-            res.status(400).send("Error: bad filename");
-            return
+        if (!this.test_name.test(req.params.namespace)) {
+            res.status(400).send("Error: bad namespace name");
+            return;
         }
 
-        var response = await this.lockTable(filename);
+        if (!this.test_name.test(req.params.filename)) {
+            console.log(req.params.filename);
+            res.status(400).send("Error: bad file name");
+            return;
+        }
+
+        if (!fs.existsSync(path.join(this.data_dir, req.params.namespace))) {
+            res.status(400).send("Error: namespace doesn't exist");
+            return;
+        }
+
+        var response = await this.lockTable(req.url);
         if (response == 1){
             res.status(400).send("Error: write locked");
             return;
@@ -118,21 +250,36 @@ class Router {
 
         var stream = this.initWriteStream(req, res, filename, filepath);
         req.on('close', async function (err){
-            await this.unlockTable(filename);
+            await this.unlockTable(req.url);
         }.bind(this));
         return req.pipe(stream);
     }
 
     async delete(req, res) {
-        const filename = req.params.filename;
+        const filename = path.join(req.params.namespace, req.params.filename);
         const filepath = path.join(this.data_dir, filename);
 
-        if (!this.test_filename.test(filename)) {
-            res.status(400).send("Error: bad filename");
-            return
+        if (!this.test_name.test(req.params.namespace)) {
+            res.status(400).send("Error: bad namespace name");
+            return;
         }
 
-        var response = await this.lockTable(filename);
+        if (!this.test_name.test(req.params.filename)) {
+            res.status(400).send("Error: bad file name");
+            return;
+        }
+
+        if (!fs.existsSync(path.join(this.data_dir, req.params.namespace))) {
+            res.status(400).send("Error: namespace doesn't exist");
+            return;
+        }
+
+        if (!fs.existsSync(filepath)){
+            res.status(400).send("Error: object doesn't exist");
+            return;
+        }
+
+        var response = await this.lockTable(req.url);
         if (response == 1){
             res.status(400).send("Error: write locked");
             return;
@@ -142,15 +289,10 @@ class Router {
             return;
         }
 
-        if (!fs.existsSync(filepath)){
-            res.status(400).send("Error: object doesn't exists");
-            return;
-        }
-
         fs.unlinkSync(filepath);
 
-        await this.unlockTable(filename);
-        res.status(200).send("File delete Successful!");
+        await this.unlockTable(req.url);
+        res.status(200).send("Success!");
     }
 
     start() {
