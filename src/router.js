@@ -33,7 +33,7 @@ class Router {
 
         this.app.get("/:filename", this.download.bind(this));
         this.app.put("/:filename", this.insert.bind(this));
-        this.app.delete("/:filename", this.delete.bind(this),);
+        this.app.delete("/:filename", this.delete.bind(this));
     }
 
     async lockTable(filename) {
