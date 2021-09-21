@@ -1,22 +1,20 @@
-const express = require("express");
 var Busboy = require('busboy');
-const { response } = require("express");
 const Requester = require("./utils/Requester.js");
 
 const {getNamespaceFiles, putNamespace, deleteNamespace, getObject, putObject, deleteObject} = require("./routes");
 
 class Router {
-    constructor(config){
-        this.app = express();
-        this.app.use(express.json());
-        this.app.use(express.urlencoded({extended: false}));
+    constructor(config, container){
+        this.app = container.express();
+        this.app.use(container.express.json());
+        this.app.use(container.express.urlencoded({extended: false}));
 
         this.port = config.PORT;
         this.dht_url = config.DHT_URL;
         this.data_dir = config.DATA_DIR;
         this.Requester = new Requester(this.dht_url);
-        this.fs = require("fs");
-        this.path = require("path");
+        this.fs = container.fs;
+        this.path = container.path;
         
         try {
             this.Requester.deleteWithUrl();
