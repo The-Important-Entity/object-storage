@@ -4,16 +4,6 @@ module.exports = async function(req, res) {
     const filename = this.path.join(req.params.namespace, req.params.filename);
     const filepath = this.path.join(this.data_dir, filename);
 
-    if (!this.test_name.test(req.params.namespace)) {
-        res.status(400).send("Error: bad namespace name");
-        return;
-    }
-
-    if (!this.test_name.test(req.params.filename)) {
-        console.log(req.params.filename);
-        res.status(400).send("Error: bad file name");
-        return;
-    }
 
     if (!this.fs.existsSync(this.path.join(this.data_dir, req.params.namespace))) {
         res.status(400).send("Error: namespace doesn't exist");

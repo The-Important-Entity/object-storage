@@ -8,16 +8,6 @@ module.exports = async function(req, res) {
         return;
     }
 
-    if (!this.test_name.test(req.params.namespace)) {
-        res.status(400).send("Error: bad namespace name");
-        return;
-    }
-
-    if (!this.test_name.test(req.params.filename)) {
-        res.status(400).send("Error: bad file name");
-        return;
-    }
-
     if (!this.fs.existsSync(this.path.join(this.data_dir, req.params.namespace))) {
         res.status(400).send("Error: namespace doesn't exist");
         return;

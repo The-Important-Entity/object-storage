@@ -2,16 +2,18 @@ module.exports = async function(req, res) {
     const namespace = req.params.namespace;
     const dirpath = this.path.join(this.data_dir, namespace);
 
-    this.lockTable(req.url);
-    if (!this.test_name.test(namespace)) {
-        res.status(400).send("Error: bad namespace name");
-        this.unlockTable(req.url);
+    if (!this.fs.existsSync(dirpath)){
+        res.status(400).send("Error: namespace doesn't exist");
         return;
     }
 
-    if (!this.fs.existsSync(dirpath)){
-        res.status(400).send("Error: namespace doesn't exist");
-        this.unlockTable(req.url);
+    var response = await this.lockTable(req.url);
+    if (response == 1){
+        res.status(400).send("Error: write locked");
+        return;
+    }
+    else if (response == 2){
+        res.status(500).send("Error: server outage");
         return;
     }
 

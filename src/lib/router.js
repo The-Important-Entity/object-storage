@@ -1,6 +1,5 @@
 var Busboy = require('busboy');
 const Requester = require("./utils/Requester.js");
-
 const {getNamespaceFiles, putNamespace, deleteNamespace, getObject, putObject, deleteObject} = require("./routes");
 
 class Router {
@@ -30,14 +29,35 @@ class Router {
         })
 
         //Operations on namespaces
-        this.app.get("/:namespace", getNamespaceFiles.bind(this));
-        this.app.put("/:namespace", putNamespace.bind(this));
-        this.app.delete("/:namespace", deleteNamespace.bind(this));
+        this.app.get("/:namespace", [
+            this.testNamespace.bind(this), 
+            getNamespaceFiles.bind(this)
+        ]);
+        this.app.put("/:namespace", [
+            this.testNamespace.bind(this), 
+            putNamespace.bind(this)
+        ]);
+        this.app.delete("/:namespace", [
+            this.testNamespace.bind(this), 
+            deleteNamespace.bind(this)
+        ]);
 
         //Operations on files in a namespace
-        this.app.get("/:namespace/:filename", getObject.bind(this));
-        this.app.put("/:namespace/:filename", putObject.bind(this));
-        this.app.delete("/:namespace/:filename", deleteObject.bind(this));
+        this.app.get("/:namespace/:filename", [
+            this.testNamespace.bind(this),
+            this.testFilename.bind(this),
+            getObject.bind(this)
+        ]);
+        this.app.put("/:namespace/:filename", [
+            this.testNamespace.bind(this), 
+            this.testFilename.bind(this),
+            putObject.bind(this)
+        ]);
+        this.app.delete("/:namespace/:filename", [
+            this.testNamespace.bind(this),
+            this.testFilename.bind(this),
+            deleteObject.bind(this)
+        ]);
     }
 
     async lockTable(filename) {
@@ -52,6 +72,22 @@ class Router {
             }
         }
         return 0;
+    }
+
+    testNamespace(req, res, next){
+        if (!this.test_name.test(req.params.namespace)) {
+            res.status(400).send("Error: bad namespace name");
+            return;
+        }
+        next();
+    }
+
+    testFilename(req, res, next){
+        if (!this.test_name.test(req.params.filename)) {
+            res.status(400).send("Error: bad filename name");
+            return;
+        }
+        next();
     }
 
     async unlockTable(filename) {

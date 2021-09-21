@@ -1,10 +1,9 @@
-const DHT_Node = require("dht-node");
 const Router = require("./lib/router");
 const container = require("./container");
 
 class ObjectStorageNode {
     constructor(dht_config, obj_config){
-        this.dht = new DHT_Node(dht_config);
+        this.dht = new container.DHT_Node(dht_config);
         this.router = new Router(obj_config, container);
     }
 
