@@ -53,7 +53,7 @@ class Requester {
             }
         }
         catch {
-            console.log(1);
+            //console.log(1);
         }
     }
 }
