@@ -7,7 +7,7 @@ class Assert {
         this.failed = 0;
     }
 
-    assert(test_data, expected) {
+    assert(info, test_data, expected) {
         if (test_data === expected) {
             this.passed++;
             console.log("Test " + this.counter.toString() + ": Passed");
@@ -16,6 +16,7 @@ class Assert {
             this.failed++;
             console.log("-------------");
             console.log("Test " + this.counter.toString() + ": Failed");
+            console.log(info);
             console.log("Expected: " + expected + ", Received: " + test_data);
             console.log("-------------");
         }
