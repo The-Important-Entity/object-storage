@@ -5,6 +5,7 @@ const integration_tests = require("./integration");
 const fs = require("fs");
 const path = require("path");
 const init = require("./utils/init");
+const cleanup = require("./utils/cleanup");
 
 const dht_config = require("../src/config/dht_config");
 const obj_config = require("../src/config/obj_config");
@@ -31,6 +32,7 @@ const obj_data_dir = path.join(process.env.TESTS_DIR, "obj");
 const download_dir = path.join(process.env.TESTS_DIR, "download");
 const upload_dir = path.join(process.env.TESTS_DIR, "upload");
 
+cleanup(dht_data_dir, obj_data_dir, download_dir, upload_dir);
 init(dht_data_dir, obj_data_dir, download_dir, upload_dir);
 
 
@@ -49,7 +51,7 @@ const run_all_tests = async function(){
     }
 
     await join_all(num_nodes);
-    await sleep(2000);
+    await sleep(1000);
 
     const tester = new Assert();
     const client = new ObjectStorageClient(client_config);
@@ -58,7 +60,7 @@ const run_all_tests = async function(){
     await integration_tests(dht_data_dir, obj_data_dir, download_dir, upload_dir, client, tester, url, num_nodes, id_max);
 
     tester.printResults();
-
+    cleanup(dht_data_dir, obj_data_dir, download_dir, upload_dir);
     await sleep(1000);
     for (var i = 0; i < num_nodes; i++) {
         await obj_nodes_arr[i].stop();
