@@ -1,5 +1,5 @@
 const DHT_Node = require("dht-node");
-const Router = require("./router");
+const Router = require("./lib/router");
 
 class ObjectStorageNode {
     constructor(dht_config, obj_config){

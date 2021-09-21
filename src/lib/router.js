@@ -1,9 +1,7 @@
 const express = require("express");
-const fs = require("fs");
-const path = require("path");
 var Busboy = require('busboy');
 const { response } = require("express");
-const Requester = require("./Requester.js");
+const Requester = require("./utils/Requester.js");
 
 const {getNamespaceFiles, putNamespace, deleteNamespace, getObject, putObject, deleteObject} = require("./routes");
 
@@ -74,7 +72,7 @@ class Router {
         });
     
         busboy.on('file', function(fieldname, file, filename, encoding, mimetype) {
-            var stream = fs.createWriteStream(filepath);
+            var stream = this.fs.createWriteStream(filepath);
     
             file.on("error", function(err) {
                 console.log("fstream error catching......>>>>>>>>>>>>>>", err);
