@@ -14,7 +14,7 @@ class ObjectStorageNode {
             return this;
         }
         catch(err) {
-            console.log(err);
+            throw err;
         }
     }
 
