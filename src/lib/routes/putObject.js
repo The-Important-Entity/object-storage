@@ -19,10 +19,15 @@ module.exports = async function(req, res) {
         res.status(500).send("Error: server outage");
         return;
     }
-
-    var stream = this.initWriteStream(req, res, filename, filepath);
-    req.on('close', async function (err){
-        await this.unlockTable(req.url);
-    }.bind(this));
-    return req.pipe(stream);
+    try {
+        var stream = this.initWriteStream(req, res, filename, filepath);
+        req.on('close', async function (err){
+            await this.unlockTable(req.url);
+        }.bind(this));
+        return req.pipe(stream);
+        }
+    catch(err) {
+        res.status(500).send("Error: Failed uploading object");
+        return;
+    }
 }

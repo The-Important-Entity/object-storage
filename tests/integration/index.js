@@ -8,6 +8,9 @@ Array.prototype.equals = function (arr) {
 }
 
 const compareFiles = function(file1, file2){
+    if (!fs.existsSync(file1) || !fs.existsSync(file2)) {
+        return false;
+    }
     const data1 = fs.readFileSync(file1).toString();
     const data2 = fs.readFileSync(file2).toString();
     return data1 == data2;
@@ -70,7 +73,7 @@ const run_tests = async function(dht_dir, obj_dir, download_dir, upload_dir, cli
 
     info = "Test GET namespace files when namespace is empty"
     res = await client.getNamespaceFiles(test_namespace);
-    tester.assert(info, res.equals([]), true);
+    tester.assert(info, Array.isArray(res) && res.equals([]), true);
 
     info = "Test GET object when object doesn't exist in namespace";
     res = await client.getObject(test_namespace, test_filename, download_dir);
@@ -94,7 +97,7 @@ const run_tests = async function(dht_dir, obj_dir, download_dir, upload_dir, cli
 
     info = "Test GET namespace files when objects exist in namespace";
     res = await client.getNamespaceFiles(test_namespace);
-    tester.assert(info, res.equals([test_filename]), true);
+    tester.assert(info, Array.isArray(res) && res.equals([test_filename]), true);
 
     info = "Test DELETE namespace when namespace is not empty";
     res = await client.deleteNamespace(test_namespace);
