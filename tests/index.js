@@ -1,7 +1,7 @@
 const ObjectStorageClient = require("object-storage-client");
 const ObjectStorageNode = require("../src");
 const Assert = require("./assert");
-const integration_tests = require("./integration");
+const integration_tests = require("./integration/index.js");
 const lock_tests = require("./lock_test");
 const fs = require("fs");
 const path = require("path");
@@ -21,8 +21,13 @@ function sleep(ms) {
     });
   }
 
-const client_config = {
+const authorized_client_config = {
     'API_KEY': "1234",
+    'URL': "http://localhost:4000"
+}
+
+const unauthorized_client_config = {
+    'API_KEY': "123",
     'URL': "http://localhost:4000"
 }
 
@@ -55,14 +60,15 @@ const run_all_tests = async function(){
     await sleep(1000);
 
     const tester = new Assert();
-    const client = new ObjectStorageClient(client_config);
+    const authorized_client = new ObjectStorageClient(authorized_client_config);
+    const unauthorized_client = new ObjectStorageClient(unauthorized_client_config);
     const url = "http://localhost:4000";
     
     console.log("\nRunning Integration Tests");
-    await integration_tests(dht_data_dir, obj_data_dir, download_dir, upload_dir, client, tester, url, num_nodes, id_max);
+    await integration_tests(dht_data_dir, obj_data_dir, download_dir, upload_dir, authorized_client, unauthorized_client, tester, url, num_nodes, id_max);
 
     console.log("\nRunning Lock Tests");
-    await lock_tests(dht_data_dir, obj_data_dir, download_dir, upload_dir, client, tester, url, num_nodes, id_max);
+    await lock_tests(dht_data_dir, obj_data_dir, download_dir, upload_dir, authorized_client, tester, url, num_nodes, id_max);
 
     tester.printResults();
     cleanup(dht_data_dir, obj_data_dir, download_dir, upload_dir);
