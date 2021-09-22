@@ -1,4 +1,6 @@
-
+const FgRed = "\x1b[31m";
+const FgGreen = "\x1b[32m";
+const Reset = "\x1b[0m";
 
 class Assert {
     constructor(){
@@ -10,15 +12,15 @@ class Assert {
     assert(info, test_data, expected) {
         if (test_data === expected) {
             this.passed++;
-            console.log("Test " + this.counter.toString() + ": Passed");
+            console.log("Test " + this.counter.toString() + ": " + FgGreen + "Passed" + Reset);
         }
         else {
             this.failed++;
-            console.log("-------------");
-            console.log("Test " + this.counter.toString() + ": Failed");
+            console.log(FgRed + "----------------------------------------" + Reset);
+            console.log("Test " + this.counter.toString() + ": " + FgRed + "Failed" + Reset);
             console.log(info);
-            console.log("Expected: " + expected + ", Received: " + test_data);
-            console.log("-------------");
+            console.log("Expected: " + FgGreen + expected + Reset + ", Received: " + FgRed + test_data + Reset);
+            console.log(FgRed + "----------------------------------------" + Reset);
         }
         this.counter++;
     }

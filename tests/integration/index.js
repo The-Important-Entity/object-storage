@@ -119,6 +119,8 @@ const run_tests = async function(dht_dir, obj_dir, download_dir, upload_dir, cli
     info = "Test GET namespace files when namespace doesn't exist";
     var res = await client.getNamespaceFiles(test_namespace);
     tester.assert(info, res, "Error: namespace doesn't exist");
+
+    fs.rmSync(test_filepath);
 }   
 
 module.exports = run_tests;

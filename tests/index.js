@@ -2,6 +2,7 @@ const ObjectStorageClient = require("object-storage-client");
 const ObjectStorageNode = require("../src");
 const Assert = require("./assert");
 const integration_tests = require("./integration");
+const lock_tests = require("./lock_test");
 const fs = require("fs");
 const path = require("path");
 const init = require("./utils/init");
@@ -55,9 +56,13 @@ const run_all_tests = async function(){
 
     const tester = new Assert();
     const client = new ObjectStorageClient(client_config);
-
     const url = "http://localhost:4000";
+    
+    console.log("Running Integration Tests");
     await integration_tests(dht_data_dir, obj_data_dir, download_dir, upload_dir, client, tester, url, num_nodes, id_max);
+
+    console.log("\nRunning Lock Tests");
+    await lock_tests(dht_data_dir, obj_data_dir, download_dir, upload_dir, client, tester, url, num_nodes, id_max);
 
     tester.printResults();
     cleanup(dht_data_dir, obj_data_dir, download_dir, upload_dir);
