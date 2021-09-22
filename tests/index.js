@@ -58,7 +58,7 @@ const run_all_tests = async function(){
     const client = new ObjectStorageClient(client_config);
     const url = "http://localhost:4000";
     
-    console.log("Running Integration Tests");
+    console.log("\nRunning Integration Tests");
     await integration_tests(dht_data_dir, obj_data_dir, download_dir, upload_dir, client, tester, url, num_nodes, id_max);
 
     console.log("\nRunning Lock Tests");
