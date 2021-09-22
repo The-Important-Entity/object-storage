@@ -3,18 +3,20 @@ module.exports = async function(req, res) {
     const filepath = this.path.join(this.data_dir, filename);
 
     const response = await this.getLock(filename);
+
     if (response) {
-        res.status(400).send("Error: object is " + response.lock_type + " locked");
+        res.status(401).send("Error: object is " + response.lock_type + " locked");
         return;
     }
 
     if (!this.fs.existsSync(this.path.join(this.data_dir, req.params.namespace))) {
-        res.status(400).send("Error: namespace doesn't exist");
+        
+        res.status(402).send("Error: namespace doesn't exist");
         return;
     }
 
     if (!this.fs.existsSync(filepath)){
-        res.status(400).send("Error: object doesn't exist");
+        res.status(403).send("Error: object doesn't exist");
         return;
     }
 

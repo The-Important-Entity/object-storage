@@ -14,6 +14,7 @@ class Router {
         this.Requester = new Requester(this.dht_url);
         this.fs = container.fs;
         this.path = container.path;
+
         
         try {
             this.Requester.deleteWithUrl();
@@ -91,6 +92,7 @@ class Router {
     }
 
     testNamespace(req, res, next){
+        
         if (!this.test_name.test(req.params.namespace)) {
             res.status(400).send("Error: bad namespace name");
             return;
