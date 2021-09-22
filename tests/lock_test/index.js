@@ -6,7 +6,7 @@ const run_tests = async function(dht_dir, obj_dir, download_dir, upload_dir, cli
     const test_filepath = path.join(upload_dir, test_filename);
     const test_namespace = "joe-namespace";
 
-    exec("dd if=/dev/zero of=" + path.join(upload_dir, test_filename) + " bs=1 count=0 seek=100M");
+    exec("dd if=/dev/zero of=" + path.join(upload_dir, test_filename) + " bs=1 count=0 seek=10M");
     await client.putNamespace(test_namespace);
 
     var r = new Array(10);
