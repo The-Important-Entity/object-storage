@@ -1,4 +1,4 @@
-const ObjectStorageClient = require("../../object-storage-client");
+const ObjectStorageClient = require("object-storage-client");
 const ObjectStorageNode = require("../src");
 const Assert = require("./assert");
 const integration_tests = require("./integration/index.js");
