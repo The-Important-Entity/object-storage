@@ -1,4 +1,4 @@
-const ObjectStorageClient = require("object-storage-client");
+const ObjectStorageClient = require("../../object-storage-client");
 const ObjectStorageNode = require("../src");
 const Assert = require("./assert");
 const integration_tests = require("./integration/index.js");
@@ -22,12 +22,14 @@ function sleep(ms) {
   }
 
 const authorized_client_config = {
-    'API_KEY': "1234",
+    "APP_ID": "TWBQWFXJUEJB52OLSNGN6JLP1FZHR2N1FU9YYJULPH9CPFXB02",
+    'SECRET_KEY': "Z1oQmWh6l8mfmprEApi3ffI0l6pDXbGIQG6DKvtYPBCyeSdjc9GWoOAgP0Vi65IbRpPp8aauH99",
     'URL': "http://localhost:4000"
 }
 
 const unauthorized_client_config = {
-    'API_KEY': "123",
+    "APP_ID": "TWBQWFXJUEJB52OLSNGN6JLP1FZHR2N1FU9YYJULPH9CPFXB02",
+    'SECRET_KEY': "Z1oQmWh6l8mfmprEApi3ffI0l6pDXbGIQG6DKvtYPBCyeSdjc9GWoOAgP0Vi65IbRpPp",
     'URL': "http://localhost:4000"
 }
 

@@ -14,7 +14,7 @@ class Router {
         this.Requester = new Requester(this.dht_url);
         this.fs = container.fs;
         this.path = container.path;
-
+        this.crypto = container.crypto;
         
         try {
             this.Requester.deleteWithUrl();
@@ -68,11 +68,33 @@ class Router {
     }
 
     async authenticate(req, res, next) {
-        if (req.headers.authorization && req.headers.authorization == "1234") {
-            next();
+        // TODO
+        console
+        var temp_secret = "Z1oQmWh6l8mfmprEApi3ffI0l6pDXbGIQG6DKvtYPBCyeSdjc9GWoOAgP0Vi65IbRpPp8aauH99";
+        if (!req.headers || !req.headers.authorization || !req.headers.date || !req.headers.nonce){
+            res.status(400).send("Error: Unauthorized!");
         }
         else {
-            res.status(400).send("Error: Unauthorized!");
+            const arr = req.headers.authorization.split(":");
+            if (arr.length != 2) {
+                res.status(400).send("Error: Unauthorized!");
+                return;
+            }
+
+            const app_id = arr[0];
+            const client_hash = arr[1];
+
+            const str = req.method + '\n' + req.url + '\n' + req.headers.date + '\n' + req.headers.nonce + '\n' + app_id
+            const hash = this.crypto.createHmac('sha256', temp_secret).update(str).digest('hex');
+
+            if (client_hash == hash) {
+                next();
+                return;
+            }
+            else {
+                res.status(400).send("Error: Unauthorized!");
+                return;
+            }
         }
     }
 
@@ -92,7 +114,6 @@ class Router {
     }
 
     testNamespace(req, res, next){
-        
         if (!this.test_name.test(req.params.namespace)) {
             res.status(400).send("Error: bad namespace name");
             return;
