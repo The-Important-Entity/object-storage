@@ -22,7 +22,7 @@ function sleep(ms) {
   }
 
 const client_config = {
-    'API_KEY': "123",
+    'API_KEY': "1234",
     'URL': "http://localhost:4000"
 }
 

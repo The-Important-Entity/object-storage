@@ -30,35 +30,51 @@ class Router {
 
         //Operations on namespaces
         this.app.get("/:namespace", [
+            this.authenticate.bind(this),
             this.testNamespace.bind(this), 
             getNamespaceFiles.bind(this)
         ]);
         this.app.put("/:namespace", [
+            this.authenticate.bind(this),
             this.testNamespace.bind(this), 
             putNamespace.bind(this)
         ]);
         this.app.delete("/:namespace", [
+            this.authenticate.bind(this),
             this.testNamespace.bind(this), 
             deleteNamespace.bind(this)
         ]);
 
         //Operations on files in a namespace
         this.app.get("/:namespace/:filename", [
+            this.authenticate.bind(this),
             this.testNamespace.bind(this),
             this.testFilename.bind(this),
             getObject.bind(this)
         ]);
         this.app.put("/:namespace/:filename", [
+            this.authenticate.bind(this),
             this.testNamespace.bind(this), 
             this.testFilename.bind(this),
             putObject.bind(this)
         ]);
         this.app.delete("/:namespace/:filename", [
+            this.authenticate.bind(this),
             this.testNamespace.bind(this),
             this.testFilename.bind(this),
             deleteObject.bind(this)
         ]);
     }
+
+    async authenticate(req, res, next) {
+        if (req.headers.authorization && req.headers.authorization == "1234") {
+            next();
+        }
+        else {
+            res.status(400).send("Error: Unauthorized!");
+        }
+    }
+
 
     async lockTable(filename) {
         var response = await this.Requester.insert_dht_writelock(filename);
