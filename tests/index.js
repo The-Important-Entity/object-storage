@@ -53,22 +53,18 @@ const run_all_tests = async function(){
 
     const postgress_path = path.join(process.env.TESTS_DIR, "postgres-data");
     const script_path = path.join(__dirname, "./db/newscript.sql");
-    console.log("sudo " + path.join(__dirname, "/db/initdb.sh ") + " " + postgress_path + " " + script_path);
+
     exec("sudo " + path.join(__dirname, "/db/initdb.sh ") + " " + postgress_path + " " + script_path, (err, stdout, stderr) => {
-        if (err) {
-          //some err occurred
-          console.error(err)
-        } else {
-         // the *entire* stdout and stderr (buffered)
-         console.log(`stdout: ${stdout}`);
-         console.log(`stderr: ${stderr}`);
-        }
-      });
+
+        console.log(stdout);
+    });
+
+
     await sleep(5000);
     const auth_server = new AuthorizationService({
         "HOST": "localhost",
         "DB_PORT": 6000,
-        "DB_USER": "postgres",
+        "DB_USER": "organization_readonly",
         "DB_PASS": "jds81799",
         "DB": "account_data",
         "PORT": 5000
