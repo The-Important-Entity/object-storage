@@ -1,6 +1,7 @@
 var Busboy = require('busboy');
 const Requester = require("./utils/Requester.js");
 const {getNamespaceFiles, putNamespace, deleteNamespace, getObject, putObject, deleteObject} = require("./routes");
+const axios = require("axios");
 
 class Router {
     constructor(config, container){
@@ -68,32 +69,31 @@ class Router {
     }
 
     async authenticate(req, res, next) {
-        // TODO
-        console
-        var temp_secret = "Z1oQmWh6l8mfmprEApi3ffI0l6pDXbGIQG6DKvtYPBCyeSdjc9GWoOAgP0Vi65IbRpPp8aauH99";
         if (!req.headers || !req.headers.authorization || !req.headers.date || !req.headers.nonce){
             res.status(400).send("Error: Unauthorized!");
         }
         else {
-            const arr = req.headers.authorization.split(":");
-            if (arr.length != 2) {
-                res.status(400).send("Error: Unauthorized!");
-                return;
+            try {
+                const response = await axios.post("http://localhost:5000/access_key", {
+                "auth_token": req.headers.authorization,
+                "method": req.method,
+                "url": req.url,
+                "date": req.headers.date,
+                "nonce": req.headers.nonce
+                });
+
+                if (response.data == "Authorized") {
+                    next();
+                    return;
+                }
+                else {
+                    res.status(400).send("Error: Unauthorized!");
+                    return;
+                }
             }
-
-            const app_id = arr[0];
-            const client_hash = arr[1];
-
-            const str = req.method + '\n' + req.url + '\n' + req.headers.date + '\n' + req.headers.nonce + '\n' + app_id
-            const hash = this.crypto.createHmac('sha256', temp_secret).update(str).digest('hex');
-
-            if (client_hash == hash) {
-                next();
-                return;
-            }
-            else {
+            catch(err) {
+                console.log(err);
                 res.status(400).send("Error: Unauthorized!");
-                return;
             }
         }
     }

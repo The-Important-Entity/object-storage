@@ -1,5 +1,7 @@
-const ObjectStorageClient = require("../../object-storage-client");
+const ObjectStorageClient = require("object-storage-client");
 const ObjectStorageNode = require("../src");
+const AuthorizationService = require("../../authentication-service");
+
 const Assert = require("./assert");
 const integration_tests = require("./integration/index.js");
 const lock_tests = require("./lock_test");
@@ -7,6 +9,7 @@ const fs = require("fs");
 const path = require("path");
 const init = require("./utils/init");
 const cleanup = require("./utils/cleanup");
+const {exec} = require("child_process");
 
 const dht_config = require("../src/config/dht_config");
 const obj_config = require("../src/config/obj_config");
@@ -48,6 +51,30 @@ const num_nodes = 10;
 
 const run_all_tests = async function(){
 
+    const postgress_path = path.join(process.env.TESTS_DIR, "postgres-data");
+    const script_path = path.join(__dirname, "./db/newscript.sql");
+    console.log("sudo " + path.join(__dirname, "/db/initdb.sh ") + " " + postgress_path + " " + script_path);
+    exec("sudo " + path.join(__dirname, "/db/initdb.sh ") + " " + postgress_path + " " + script_path, (err, stdout, stderr) => {
+        if (err) {
+          //some err occurred
+          console.error(err)
+        } else {
+         // the *entire* stdout and stderr (buffered)
+         console.log(`stdout: ${stdout}`);
+         console.log(`stderr: ${stderr}`);
+        }
+      });
+    await sleep(5000);
+    const auth_server = new AuthorizationService({
+        "HOST": "localhost",
+        "DB_PORT": 6000,
+        "DB_USER": "postgres",
+        "DB_PASS": "jds81799",
+        "DB": "account_data",
+        "PORT": 5000
+    });
+    auth_server.start();
+
     var obj_nodes_arr = new Array(num_nodes);
     for (var i = 0; i < num_nodes; i++) {
         const id = Math.floor(id_max / (num_nodes + 1)) * (i+1);
@@ -78,5 +105,7 @@ const run_all_tests = async function(){
     for (var i = 0; i < num_nodes; i++) {
         await obj_nodes_arr[i].stop();
     }
+    auth_server.stop();
+    exec(path.join(__dirname, "./db/destroydb.sh") + " " + path.join(process.env.TESTS_DIR, "postgres-data"));
 }
 run_all_tests();
