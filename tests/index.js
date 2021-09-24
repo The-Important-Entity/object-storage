@@ -64,7 +64,7 @@ const run_all_tests = async function(){
     const auth_server = new AuthorizationService({
         "HOST": "localhost",
         "DB_PORT": 6000,
-        "DB_USER": "organization_readonly",
+        "DB_USER": "postgres",
         "DB_PASS": "jds81799",
         "DB": "account_data",
         "PORT": 5000
