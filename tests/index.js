@@ -76,7 +76,7 @@ const run_all_tests = async function(){
         const id = Math.floor(id_max / (num_nodes + 1)) * (i+1);
         const dht_url = "http://localhost:300" + i.toString();
         const dhtConfig = dht_config(3000 + i, dht_url, id, id_max, dht_data_dir, TABLE_SIZE);
-        const objConfig = obj_config(4000 + i, dht_url, obj_data_dir);
+        const objConfig = obj_config(4000 + i, dht_url, obj_data_dir, "http://localhost:5000");
         obj_nodes_arr[i] = new ObjectStorageNode(dhtConfig, objConfig); 
         await obj_nodes_arr[i].start();
     }

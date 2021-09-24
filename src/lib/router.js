@@ -16,6 +16,8 @@ class Router {
         this.fs = container.fs;
         this.path = container.path;
         this.crypto = container.crypto;
+
+        this.auth_server = config.AUTH;
         
         try {
             this.Requester.deleteWithUrl();
@@ -74,7 +76,7 @@ class Router {
         }
         else {
             try {
-                const response = await axios.post("http://localhost:5000/access_key", {
+                const response = await axios.post(this.auth_server + "/access_key", {
                 "auth_token": req.headers.authorization,
                 "method": req.method,
                 "url": req.url,
