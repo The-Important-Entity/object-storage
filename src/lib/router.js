@@ -71,13 +71,14 @@ class Router {
     }
 
     async authenticate(req, res, next) {
-        if (!req.headers || !req.headers.authorization || !req.headers.date || !req.headers.nonce){
+        if (!req.headers || !req.headers.authorization || !req.headers.date || !req.headers.nonce || !req.params.namespace){
             res.status(400).send("Error: Unauthorized!");
         }
         else {
             try {
                 const response = await axios.post(this.auth_server + "/access_key", {
                 "auth_token": req.headers.authorization,
+                "namespace": !req.params.namespace,
                 "method": req.method,
                 "url": req.url,
                 "date": req.headers.date,
