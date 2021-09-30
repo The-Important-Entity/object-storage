@@ -28,7 +28,7 @@ module.exports = async function(req, res) {
         return;
     };
 
-    this.fs.mkdir(dirpath, function(err) {
+    this.fs.mkdir(dirpath, async function(err) {
         if (err) {
             res.status(500).send("Error: creating namespace");
             this.unlockTable(req.url);
