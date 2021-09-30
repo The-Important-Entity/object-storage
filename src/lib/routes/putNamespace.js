@@ -25,6 +25,7 @@ module.exports = async function(req, res) {
 
         const postNamespace = await this.Requester.insertNamespace(namespace, group_id);
         if (!Array.isArray(postNamespace)) {
+            console.log(postNamespace);
             res.status(500).send("Error: internal server error");
             return;
         };
