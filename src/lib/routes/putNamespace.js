@@ -22,6 +22,7 @@ module.exports = async function(req, res) {
         const app_id = arr[0];
         response = await this.Requester.getAppId(app_id);
         const group_id = response[0].group_id;
+        console.log(response);
 
         const postNamespace = await this.Requester.insertNamespace(namespace, group_id);
         if (!Array.isArray(postNamespace)) {
