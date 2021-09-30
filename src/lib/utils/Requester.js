@@ -2,8 +2,9 @@
 const axios = require("axios");
 
 class Requester {
-    constructor(dht_url){
+    constructor(dht_url, db_service){
         this.dht_url = dht_url;
+        this.db_service = db_service;
     }
 
     async insert_dht_writelock(filename) {
@@ -54,6 +55,58 @@ class Requester {
         }
         catch {
             //console.log(1);
+        }
+    }
+
+    async insertNamespace(namespace, group_id) {
+        try {
+            const response = await axios.post(this.db_service + "/namespace/security_group", {
+                "name": namespace,
+                "group_id": group_id
+            });
+            return response.data
+        }
+        catch(err) {
+            console.log(err);
+            return err.response.data;
+        }
+    }
+
+    async deleteNamespace(namespace) {
+        try {
+            const response = await axios.depete(this.db_service + "/namespace/" + namespace);
+            return response.data
+        }
+        catch(err) {
+            console.log(err);
+            return err.response.data;
+        }
+    }
+
+    async insertSecurityPermission(namespace, group_id) {
+        try {
+            const response = await axios.post(this.db_service + "/security_perm", {
+                "namespace": namespace,
+                "group_id": group_id,
+                "read_perm": 1,
+                "write_perm": 1
+            });
+            return response.data;
+        }
+        catch(err) {
+            console.log(err);
+            return err.response.data;
+        }
+    }
+
+    async getAppId(app_id) {
+        try {
+            const response = await axios.get(this.db_service + "/access_key/single/" + app_id);
+            return response.data;
+        }
+        catch(err) {
+            console.log(err);
+            return err.response.data
         }
     }
 }

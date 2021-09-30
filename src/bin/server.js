@@ -12,9 +12,10 @@ const obj_port = process.env.OBJ_PORT;
 const url = "http://" + process.env.HOST + ":" + dht_port;
 const id = process.env.DHT_ID;
 const auth = process.env.AUTH;
+const db_service = process.env.DB_SERVICE
 
 const dhtConfig = dht_config(dht_port, url, id, id_max, dht_data_dir, TABLE_SIZE);
-const objConfig = obj_config(obj_port, url, obj_data_dir, auth);
+const objConfig = obj_config(obj_port, url, obj_data_dir, auth, db_service);
 
 var server = new ObjectStorageNode(dhtConfig, objConfig);
 

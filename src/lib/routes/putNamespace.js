@@ -17,10 +17,22 @@ module.exports = async function(req, res) {
         return;
     }
 
+    const arr = req.headers.authorization.split(":");
+    const app_id = arr[0];
+    const response = await this.requester.getAppId(app_id);
+    const group_id = response[0].group_id;
+
+    const postNamespace = await this.requester.insertNamespace(namespace, group_id);
+    if (!Array.isArray(postNamespace)) {
+        res.status(500).send("Error: internal server error");
+        return;
+    };
+
     this.fs.mkdir(dirpath, function(err) {
         if (err) {
             res.status(500).send("Error: creating namespace");
             this.unlockTable(req.url);
+            await this.requester.deleteNamespace(namespace);
             return;
         }
         res.status(200).send("Success!");

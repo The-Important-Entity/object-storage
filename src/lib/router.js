@@ -12,15 +12,14 @@ class Router {
         this.port = config.PORT;
         this.dht_url = config.DHT_URL;
         this.data_dir = config.DATA_DIR;
-        this.Requester = new Requester(this.dht_url);
+        this.Requester = new Requester(this.dht_url, config.DB_SERVICE);
         this.fs = container.fs;
         this.path = container.path;
         this.crypto = container.crypto;
-
         this.auth_server = config.AUTH;
         
         try {
-            this.Requester.deleteWithUrl();
+            constthis.Requester.deleteWithUrl();
         }
         catch {
             
@@ -76,14 +75,22 @@ class Router {
         }
         else {
             try {
-                const response = await axios.post(this.auth_server + "/access_key", {
+                var query;
+                if (req.method=="PUT" && !req.query.filename) {
+                    query = "/access_key?type=postNamespace";
+                }
+                else {
+                    query = "/access_key";
+                }
+                const response = await axios.post(this.auth_server + query, {
                     "auth_token": req.headers.authorization,
                     "namespace": req.params.namespace,
                     "method": req.method,
                     "url": req.url,
                     "date": req.headers.date,
                     "nonce": req.headers.nonce
-                });
+                })
+                
 
                 if (response.data == "Authorized") {
                     next();
