@@ -20,6 +20,7 @@ module.exports = async function(req, res) {
 
         const arr = req.headers.authorization.split(":");
         const app_id = arr[0];
+        console.log(arr);
         response = await this.Requester.getAppId(app_id);
         const group_id = response[0].group_id;
         console.log(response);
