@@ -31,6 +31,7 @@ module.exports = async function(req, res) {
                     this.unlockTable(req.url);
                     return;
                 }
+                await this.Requester.deleteNamespace(namespace);
                 res.status(200).send("Success!");
             }.bind(this));
         }
