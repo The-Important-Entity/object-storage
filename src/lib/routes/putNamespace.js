@@ -19,7 +19,7 @@ module.exports = async function(req, res) {
 
     const arr = req.headers.authorization.split(":");
     const app_id = arr[0];
-    const response = await this.requester.getAppId(app_id);
+    response = await this.requester.getAppId(app_id);
     const group_id = response[0].group_id;
 
     const postNamespace = await this.requester.insertNamespace(namespace, group_id);
