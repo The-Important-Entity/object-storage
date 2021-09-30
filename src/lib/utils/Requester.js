@@ -61,7 +61,7 @@ class Requester {
     async insertNamespace(namespace, group_id) {
         try {
             const response = await axios.post(this.db_service + "/namespace/security_group", {
-                "name": namespace,
+                "namespace": namespace,
                 "group_id": group_id
             });
             return response.data
