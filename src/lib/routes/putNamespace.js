@@ -26,6 +26,7 @@ module.exports = async function(req, res) {
         const postNamespace = await this.Requester.insertNamespace(namespace, group_id);
         if (!Array.isArray(postNamespace)) {
             console.log(postNamespace);
+            await this.unlockTable(req.url);
             res.status(500).send("Error: internal server error");
             return;
         };
@@ -43,6 +44,7 @@ module.exports = async function(req, res) {
     }
     catch(err) {
         console.log(err);
+        await this.unlockTable(req.url);
         res.status(500).send("Internal Server Error");
     }
 }
