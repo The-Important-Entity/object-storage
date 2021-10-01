@@ -1,7 +1,7 @@
 module.exports = async function(req, res) {
     const namespace = req.params.namespace;
     const dirpath = this.path.join(this.data_dir, namespace);
-
+    
     if (!this.fs.existsSync(dirpath)){
         res.status(400).send("Error: namespace doesn't exist");
         return;

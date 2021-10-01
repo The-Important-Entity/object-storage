@@ -74,7 +74,7 @@ class Requester {
 
     async deleteNamespace(namespace) {
         try {
-            const response = await axios.depete(this.db_service + "/namespace/" + namespace);
+            const response = await axios.delete(this.db_service + "/namespace/" + namespace);
             return response.data
         }
         catch(err) {
