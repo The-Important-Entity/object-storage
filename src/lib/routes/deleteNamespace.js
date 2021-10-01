@@ -25,7 +25,7 @@ module.exports = async function(req, res) {
             return;
         } 
         if (files.length == 0) {
-            this.fs.rmdir(dirpath, function(err) {
+            this.fs.rmdir(dirpath, async function(err) {
                 if (err) {
                     res.status(500).send("Error: deleting namespace");
                     this.unlockTable(req.url);
