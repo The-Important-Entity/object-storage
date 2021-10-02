@@ -101,7 +101,7 @@ class Requester {
 
     async getAppId(app_id) {
         try {
-            const response = await axios.get(this.db_service + "/access_key/single/" + app_id);
+            const response = await axios.get(this.db_service + "/access_key?app_id=" + app_id);
             return response.data;
         }
         catch(err) {
