@@ -7,7 +7,7 @@ module.exports = function(port, url, id, id_max, data_dir, size){
         "URL": url,
         "ID": id,
         "ID_MAX": id_max,
-        "DATA_DIR": path.join(data_dir, '/' + id),
+        "DATA_DIR": path.join(data_dir),
         "SIZE": size
     };
 }
